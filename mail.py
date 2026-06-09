@@ -6,7 +6,12 @@ from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
 import hashlib
 import hmac
 import random
+from dotenv import load_dotenv
 import os
+
+load_dotenv()
+MAIL_USERNAME = os.getenv("MAIL_USERNAME")
+MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
 
 # ─── DATABASE ─────────────────────────────
 DATABASE_URL = "mysql+pymysql://root:1234@localhost:3306/usersdb"
@@ -46,9 +51,9 @@ Base.metadata.create_all(bind=engine)
 
 # ─── EMAIL CONFIG ─────────────────────────
 conf = ConnectionConfig(
-    MAIL_USERNAME   = "arhtyudg@gmail.com",    # ← your gmail
-    MAIL_PASSWORD   = "isuq nhrv hvnd qhrl",        # ← gmail app password
-    MAIL_FROM       = "arhtyudg@gmail.com",     # ← your gmail
+    MAIL_USERNAME   = MAIL_USERNAME,    # ← your gmail
+    MAIL_PASSWORD   = MAIL_PASSWORD,        # ← gmail app password
+    MAIL_FROM       = MAIL_USERNAME,     # ← your gmail
     MAIL_PORT       = 587,
     MAIL_SERVER     = "smtp.gmail.com",
     MAIL_STARTTLS   = True,
