@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>UserBase — Admin Panel</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0f; --surface: #111118; --surface2: #18181f;
+      --border: rgba(255,255,255,0.08); --border-strong: rgba(255,255,255,0.15);
+      --accent: #7effa0; --accent-dim: rgba(126,255,160,0.12); --accent-dim2: rgba(126,255,160,0.06);
+      --text: #f0f0f5; --text2: #8888a0; --text3: #55556a;
+      --danger: #ff5e6c; --danger-dim: rgba(255,94,108,0.12);
+      --warn: #ffb347; --warn-dim: rgba(255,179,71,0.1);
+      --success: #7effa0; --success-dim: rgba(126,255,160,0.1);
+      --radius: 12px; --radius-sm: 7px;
+    }
+    html, body { min-height: 100vh; background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; font-size: 15px; line-height: 1.6; }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: linear-gradient(rgba(126,255,160,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(126,255,160,0.03) 1px, transparent 1px);
+      background-size: 48px 48px; pointer-events: none; z-index: 0;
+    }
+    .app { position: relative; z-index: 1; max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+    .header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 3rem; flex-wrap: wrap; gap: 1rem; }
+    .logo { display: flex; align-items: center; gap: 12px; }
+    .logo-mark { width: 40px; height: 40px; border-radius: 10px; background: var(--accent); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(126,255,160,0.35); }
+    .logo-mark svg { width: 22px; height: 22px; }
+    .logo-text h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+    .logo-text p { font-size: 12px; color: var(--text2); font-family: 'DM Mono', monospace; margin-top: 1px; }
+    .api-config { display: flex; align-items: center; gap: 10px; }
+    .api-config label { font-size: 12px; font-family: 'DM Mono', monospace; color: var(--text3); white-space: nowrap; }
+    .api-config input { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--accent); font-family: 'DM Mono', monospace; font-size: 12px; padding: 7px 12px; width: 210px; }
+    .api-config input:focus { outline: none; border-color: var(--accent); }
+    .tabs { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 5px; margin-bottom: 1.75rem; width: fit-content; }
+    .tab { display: flex; align-items: center; gap: 7px; padding: 9px 20px; border-radius: 8px; border: none; background: none; color: var(--text2); font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.18s; white-space: nowrap; }
+    .tab svg { width: 15px; height: 15px; flex-shrink: 0; }
+    .tab:hover { color: var(--text); }
+    .tab.active { background: var(--accent-dim); color: var(--accent); }
+    .panel { display: none; animation: fadeUp 0.25s ease; }
+    .panel.active { display: block; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.75rem; }
+    .card-title { font-size: 13px; font-family: 'DM Mono', monospace; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1.25rem; }
+    .form-row { margin-bottom: 1.1rem; }
+    .form-row label { display: block; font-size: 12px; font-family: 'DM Mono', monospace; color: var(--text2); margin-bottom: 7px; }
+    .form-row input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: 'Syne', sans-serif; font-size: 14px; padding: 11px 14px; transition: border-color 0.2s, box-shadow 0.2s; }
+    .form-row input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(126,255,160,0.1); }
+    .form-row input::placeholder { color: var(--text3); }
+    .btn { display: inline-flex; align-items: center; gap: 7px; padding: 10px 20px; border-radius: var(--radius-sm); border: 1px solid var(--border-strong); background: none; color: var(--text); font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+    .btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+    .btn:hover { background: var(--surface2); }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--accent); color: #0a0a0f; border-color: var(--accent); font-weight: 700; }
+    .btn-primary:hover { background: #9dffb8; border-color: #9dffb8; }
+    .btn-sm { padding: 6px 12px; font-size: 13px; }
+    .btn-danger { color: var(--danger); border-color: rgba(255,94,108,0.3); }
+    .btn-danger:hover { background: var(--danger-dim); border-color: var(--danger); }
+    .status { display: none; align-items: center; gap: 9px; padding: 11px 15px; border-radius: var(--radius-sm); font-size: 13px; font-family: 'DM Mono', monospace; margin-bottom: 1.25rem; border: 1px solid; }
+    .status.show { display: flex; animation: fadeUp 0.2s ease; }
+    .status svg { width: 15px; height: 15px; flex-shrink: 0; }
+    .status.success { background: var(--success-dim); color: var(--success); border-color: rgba(126,255,160,0.2); }
+    .status.error { background: var(--danger-dim); color: var(--danger); border-color: rgba(255,94,108,0.2); }
+    .status.info { background: rgba(100,150,255,0.08); color: #7eb8ff; border-color: rgba(100,150,255,0.2); }
+    .otp-inputs { display: flex; gap: 10px; margin-bottom: 1.1rem; }
+    .otp-inputs input { width: 48px; height: 56px; text-align: center; font-size: 22px; font-weight: 700; font-family: 'DM Mono', monospace; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--accent); }
+    .otp-inputs input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(126,255,160,0.1); }
+    .table-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 10px; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    thead th { text-align: left; padding: 10px 14px; font-size: 11px; font-family: 'DM Mono', monospace; color: var(--text3); font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid var(--border); }
+    tbody tr { transition: background 0.12s; }
+    tbody tr:hover td { background: var(--surface2); }
+    tbody td { padding: 13px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tbody tr:last-child td { border-bottom: none; }
+    .id-badge { display: inline-block; padding: 3px 9px; border-radius: 99px; background: var(--surface2); border: 1px solid var(--border); font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text2); }
+    .user-chip { display: flex; align-items: center; gap: 10px; }
+    .avatar { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; background: var(--accent-dim); border: 1px solid rgba(126,255,160,0.2); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--accent); }
+    .verified-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 99px; font-size: 11px; font-family: 'DM Mono', monospace; }
+    .verified-yes { background: var(--success-dim); color: var(--success); border: 1px solid rgba(126,255,160,0.2); }
+    .verified-no { background: var(--danger-dim); color: var(--danger); border: 1px solid rgba(255,94,108,0.2); }
+    .empty { text-align: center; padding: 3rem 1rem; }
+    .empty-icon { width: 48px; height: 48px; margin: 0 auto 1rem; color: var(--text3); }
+    .empty p { color: var(--text3); font-size: 14px; font-family: 'DM Mono', monospace; }
+    .spinner { width: 18px; height: 18px; border: 2px solid var(--border-strong); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.55s linear infinite; display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+    .step-indicator { display: flex; align-items: center; gap: 8px; margin-bottom: 1.5rem; }
+    .step { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; font-size: 12px; font-weight: 700; font-family: 'DM Mono', monospace; }
+    .step.active { background: var(--accent); color: #0a0a0f; }
+    .step.done { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(126,255,160,0.3); }
+    .step.inactive { background: var(--surface2); color: var(--text3); border: 1px solid var(--border); }
+    .step-line { flex: 1; height: 1px; background: var(--border); }
+    .step-line.done { background: var(--accent); opacity: 0.3; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 22 22" fill="none"><circle cx="11" cy="7" r="4" fill="#0a0a0f"/><path d="M3 19c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke="#0a0a0f" stroke-width="2" stroke-linecap="round"/></svg>
+      </div>
+      <div class="logo-text">
+        <h1>UserBase</h1>
+        <p>admin panel · FastAPI + MySQL</p>
+      </div>
+    </div>
+    <div class="api-config">
+      <label>API URL</label>
+      <input type="text" id="apiBase" value="http://127.0.0.1:8000" spellcheck="false"/>
+    </div>
+  </header>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('login', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      Login
+    </button>
+    <button class="tab" onclick="switchTab('register', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+      Register
+    </button>
+    <button class="tab" onclick="switchTab('users', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      All Users
+    </button>
+  </div>
+
+  <!-- LOGIN PANEL -->
+  <div id="panel-login" class="panel active">
+    <div class="card" style="max-width:440px;">
+      <p class="card-title">sign in</p>
+      <div id="login-status" class="status"></div>
+      <div class="form-row">
+        <label>email</label>
+        <input type="email" id="login-email" placeholder="your@email.com" autocomplete="email"/>
+      </div>
+      <div class="form-row">
+        <label>password</label>
+        <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter') handleLogin()"/>
+      </div>
+      <hr class="divider"/>
+      <button class="btn btn-primary" onclick="handleLogin()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        Sign In
+      </button>
+    </div>
+  </div>
+
+  <!-- REGISTER PANEL -->
+  <div id="panel-register" class="panel">
+    <div class="card" style="max-width:440px;">
+      <p class="card-title">create account</p>
+
+      <!-- step indicator -->
+      <div class="step-indicator">
+        <div class="step active" id="step1-dot">1</div>
+        <div class="step-line" id="line1"></div>
+        <div class="step inactive" id="step2-dot">2</div>
+      </div>
+
+      <div id="register-status" class="status"></div>
+
+      <!-- STEP 1 — fill details -->
+      <div id="step1">
+        <div class="form-row">
+          <label>full name</label>
+          <input type="text" id="reg-name" placeholder="your full name" autocomplete="off"/>
+        </div>
+        <div class="form-row">
+          <label>email</label>
+          <input type="email" id="reg-email" placeholder="your@email.com" autocomplete="off"/>
+        </div>
+        <div class="form-row">
+          <label>password</label>
+          <input type="password" id="reg-pass" placeholder="choose a password" autocomplete="new-password"/>
+        </div>
+        <hr class="divider"/>
+        <button class="btn btn-primary" onclick="handleRegister()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+          Send OTP
+        </button>
+      </div>
+
+      <!-- STEP 2 — enter OTP -->
+      <div id="step2" style="display:none;">
+        <p style="font-size:13px; color:var(--text2); font-family:'DM Mono',monospace; margin-bottom:1.25rem;">
+          OTP sent to <span id="otp-email-display" style="color:var(--accent);"></span>
+        </p>
+        <div class="form-row">
+          <label>enter 6-digit OTP</label>
+          <div class="otp-inputs">
+            <input type="text" maxlength="1" class="otp-box" id="otp0" oninput="otpNext(0)" onkeydown="otpBack(event,0)"/>
+            <input type="text" maxlength="1" class="otp-box" id="otp1" oninput="otpNext(1)" onkeydown="otpBack(event,1)"/>
+            <input type="text" maxlength="1" class="otp-box" id="otp2" oninput="otpNext(2)" onkeydown="otpBack(event,2)"/>
+            <input type="text" maxlength="1" class="otp-box" id="otp3" oninput="otpNext(3)" onkeydown="otpBack(event,3)"/>
+            <input type="text" maxlength="1" class="otp-box" id="otp4" oninput="otpNext(4)" onkeydown="otpBack(event,4)"/>
+            <input type="text" maxlength="1" class="otp-box" id="otp5" oninput="otpNext(5)" onkeydown="otpBack(event,5)"/>
+          </div>
+        </div>
+        <hr class="divider"/>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="handleVerifyOTP()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Verify OTP
+          </button>
+          <button class="btn" onclick="backToStep1()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            Back
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ALL USERS PANEL -->
+  <div id="panel-users" class="panel">
+    <div class="table-header">
+      <div id="users-status" class="status" style="margin-bottom:0; flex:1;"></div>
+      <button class="btn btn-sm" onclick="loadUsers()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        Refresh
+      </button>
+    </div>
+    <div class="card">
+      <div id="users-loading" class="empty" style="display:none;">
+        <div class="spinner" style="width:28px;height:28px;margin:0 auto 1rem;"></div>
+        <p>fetching users…</p>
+      </div>
+      <div id="users-empty" class="empty" style="display:none;">
+        <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+        <p>no users yet</p>
+      </div>
+      <div class="table-wrap" id="table-wrap">
+        <div style="font-size:12px; font-family:'DM Mono',monospace; color:var(--text3); margin-bottom:12px;">showing <span id="user-count-num" style="color:var(--accent);">0</span> users</div>
+        <table>
+          <thead>
+            <tr>
+              <th>id</th>
+              <th>name</th>
+              <th>email</th>
+              <th>verified</th>
+              <th>actions</th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const api = () => document.getElementById('apiBase').value.replace(/\/$/, '');
+
+  // ── TAB SWITCHING ──
+  function switchTab(name, btn) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+    if (name === 'users') loadUsers();
+  }
+
+  // ── STATUS ──
+  function showStatus(id, type, msg) {
+    const el = document.getElementById(id);
+    const icons = {
+      success: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+      error:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
+      info:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`
+    };
+    el.className = 'status show ' + type;
+    el.innerHTML = icons[type] + msg;
+    if (type !== 'info') setTimeout(() => el.classList.remove('show'), 5000);
+  }
+
+  // ── LOGIN ──
+  async function handleLogin() {
+    const email    = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-pass').value;
+    if (!email || !password) { showStatus('login-status', 'error', 'please fill in both fields'); return; }
+    showStatus('login-status', 'info', 'checking credentials…');
+    try {
+      const res  = await fetch(`${api()}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (res.ok) showStatus('login-status', 'success', `welcome back, <strong>${data.name}</strong>!`);
+      else        showStatus('login-status', 'error', data.detail);
+    } catch {
+      showStatus('login-status', 'error', 'cannot reach API — check the URL above');
+    }
+  }
+
+  // ── REGISTER STEP 1 — send OTP ──
+  let currentEmail = '';
+  async function handleRegister() {
+    const name     = document.getElementById('reg-name').value.trim();
+    const email    = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-pass').value;
+    if (!name || !email || !password) { showStatus('register-status', 'error', 'all fields are required'); return; }
+    showStatus('register-status', 'info', 'sending OTP to your email…');
+    try {
+      const res  = await fetch(`${api()}/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        currentEmail = email;
+        document.getElementById('otp-email-display').textContent = email;
+        document.getElementById('step1').style.display = 'none';
+        document.getElementById('step2').style.display = 'block';
+        document.getElementById('step1-dot').className = 'step done';
+        document.getElementById('step2-dot').className = 'step active';
+        document.getElementById('line1').className = 'step-line done';
+        showStatus('register-status', 'success', 'OTP sent! check your email');
+        document.getElementById('otp0').focus();
+      } else {
+        showStatus('register-status', 'error', data.detail);
+      }
+    } catch {
+      showStatus('register-status', 'error', 'cannot reach API — check the URL above');
+    }
+  }
+
+  // ── OTP INPUT HELPERS ──
+  function otpNext(i) {
+    const val = document.getElementById('otp' + i).value;
+    if (val && i < 5) document.getElementById('otp' + (i+1)).focus();
+    if (i === 5 && val) handleVerifyOTP();
+  }
+  function otpBack(e, i) {
+    if (e.key === 'Backspace' && !document.getElementById('otp' + i).value && i > 0)
+      document.getElementById('otp' + (i-1)).focus();
+  }
+  function getOTP() {
+    return Array.from({length:6}, (_,i) => document.getElementById('otp'+i).value).join('');
+  }
+
+  // ── REGISTER STEP 2 — verify OTP ──
+  async function handleVerifyOTP() {
+    const otp = getOTP();
+    if (otp.length < 6) { showStatus('register-status', 'error', 'enter all 6 digits'); return; }
+    showStatus('register-status', 'info', 'verifying OTP…');
+    try {
+      const res  = await fetch(`${api()}/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: currentEmail, otp })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showStatus('register-status', 'success', `🎉 registration successful! welcome, <strong>${data.name}</strong>`);
+        setTimeout(() => {
+          backToStep1();
+          document.getElementById('reg-name').value = '';
+          document.getElementById('reg-email').value = '';
+          document.getElementById('reg-pass').value = '';
+        }, 3000);
+      } else {
+        showStatus('register-status', 'error', data.detail);
+      }
+    } catch {
+      showStatus('register-status', 'error', 'cannot reach API — check the URL above');
+    }
+  }
+
+  function backToStep1() {
+    document.getElementById('step1').style.display = 'block';
+    document.getElementById('step2').style.display = 'none';
+    document.getElementById('step1-dot').className = 'step active';
+    document.getElementById('step2-dot').className = 'step inactive';
+    document.getElementById('line1').className = 'step-line';
+    for(let i=0;i<6;i++) document.getElementById('otp'+i).value='';
+  }
+
+  // ── LOAD USERS ──
+  async function loadUsers() {
+    const tbody   = document.getElementById('users-tbody');
+    const wrap    = document.getElementById('table-wrap');
+    const loading = document.getElementById('users-loading');
+    const empty   = document.getElementById('users-empty');
+    tbody.innerHTML = '';
+    wrap.style.display = 'none';
+    loading.style.display = 'block';
+    empty.style.display = 'none';
+    try {
+      const res   = await fetch(`${api()}/users`);
+      const users = await res.json();
+      loading.style.display = 'none';
+      if (!users.length) { empty.style.display = 'block'; return; }
+      wrap.style.display = 'block';
+      document.getElementById('user-count-num').textContent = users.length;
+      users.forEach(renderRow);
+    } catch {
+      loading.style.display = 'none';
+      showStatus('users-status', 'error', 'cannot reach API — check the URL above');
+    }
+  }
+
+  function initials(name) { return (name || '?').slice(0,2).toUpperCase(); }
+
+  function renderRow(u) {
+    const tr = document.createElement('tr');
+    tr.id = 'row-' + u.user_id;
+    const verifiedBadge = u.verified
+      ? `<span class="verified-badge verified-yes">✓ verified</span>`
+      : `<span class="verified-badge verified-no">✗ unverified</span>`;
+    tr.innerHTML = `
+      <td><span class="id-badge">#${u.user_id}</span></td>
+      <td>
+        <div class="user-chip">
+          <div class="avatar">${initials(u.name)}</div>
+          <span>${u.name}</span>
+        </div>
+      </td>
+      <td style="font-family:'DM Mono',monospace; font-size:13px; color:var(--text2);">${u.email}</td>
+      <td>${verifiedBadge}</td>
+      <td>
+        <button class="btn btn-sm btn-danger" onclick="deleteUser(${u.user_id})">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+          Delete
+        </button>
+      </td>`;
+    document.getElementById('users-tbody').appendChild(tr);
+    }
+
+  async function deleteUser(id) {
+    if (!confirm(`permanently delete user #${id}?`)) return;
+    try {
+      const res  = await fetch(`${api()}/users/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      showStatus('users-status', data.message === 'User removed successfully' ? 'success' : 'error', data.message);
+      loadUsers();
+    } catch {
+      showStatus('users-status', 'error', 'delete failed — check the API connection');
+    }
+  }
+</script>
+</body>
+</html>
